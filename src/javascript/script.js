@@ -57,6 +57,19 @@ function getSecondsLeft(endHour, endMinute) {
   const now = new Date();
   const end = new Date();
   end.setHours(endHour, endMinute, 0, 0);
+
+  if (
+    endHour < startHour ||
+    (endHour === startHour && endMinute <= startMinute)
+  ) {
+    if (
+      now.getHours() > endHour ||
+      (now.getHours() === endHour && now.getMinutes() >= endMinute)
+    ) {
+      end.setDate(end.getDate() + 1);
+    }
+  }
+
   return Math.floor((end - now) / 1000);
 }
 
@@ -64,13 +77,21 @@ function getSecondsToWeekend() {
   const now = new Date();
   const currentDay = now.getDay();
   const currentTime = now.getHours() * 60 + now.getMinutes();
+  const startTime = startHour * 60 + startMinute;
   const endTime = endHour * 60 + endMinute;
 
   if (currentDay === 6 || currentDay === 0) {
     return -1;
   }
 
-  if (currentDay === 5 && currentTime >= endTime) {
+  let isAfterWork = false;
+  if (endTime > startTime) {
+    isAfterWork = currentTime >= endTime;
+  } else {
+    isAfterWork = currentTime >= endTime && currentTime < startTime;
+  }
+
+  if (currentDay === 5 && isAfterWork) {
     return -1;
   }
 
@@ -78,6 +99,10 @@ function getSecondsToWeekend() {
   const weekend = new Date(now);
   weekend.setDate(now.getDate() + daysUntilFriday);
   weekend.setHours(endHour, endMinute, 0, 0);
+
+  if (endTime <= startTime) {
+    weekend.setDate(weekend.getDate() + 1);
+  }
 
   return Math.floor((weekend - now) / 1000);
 }
